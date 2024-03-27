@@ -30,7 +30,7 @@ class LandingScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Tham gia Thu Gom ngay!',
+                  'Tham gia 3TMarket ngay!',
                   style: AppTextStyles.headline1.copyWith(
                     color: ColorsConstants.kMainColor,
                     fontSize: 24.sp,

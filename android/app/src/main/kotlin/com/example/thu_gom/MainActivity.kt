@@ -1,4 +1,4 @@
-package vn.donaso.3tmarket
+package vn.donaso.market
 
 import io.flutter.embedding.android.FlutterActivity
 
