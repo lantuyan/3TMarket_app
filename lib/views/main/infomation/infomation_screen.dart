@@ -109,7 +109,7 @@ class InfomationScreen extends StatelessWidget {
                   MaterialPageRoute(
                       builder: (context) => WebViewPage(
                             url:
-                                "https://thanhnien.vn/da-nang-tai-khoi-dong-thu-tien-rac-khong-dung-tien-mat-185230512073636513.htm",
+                                "https://stnmt.thuathienhue.gov.vn/thong-tin-chi-dao-dieu-hanh/trien-khai-thuc-hien-cac-quy-dinh-ve-bao-ve-moi-truong.html",
                           )),
                 );
               },
@@ -124,7 +124,7 @@ class InfomationScreen extends StatelessWidget {
                   MaterialPageRoute(
                       builder: (context) => WebViewPage(
                             url:
-                                "https://tnmt.danang.gov.vn/van-ban-phap-quy/chi-tiet?id=2366&u=nghiinhquyinhvexuphatviphamhanhchinhtronglinhvucbaovemoitruong",
+                                "https://stp.thuathienhue.gov.vn/?gd=26&cn=350&tc=3769",
                           )),
                 );
               },
@@ -153,7 +153,7 @@ class InfomationScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => WebViewPage(
-                            url: "https://donaso.vn/",
+                            url: "https://khoamoitruonghue.edu.vn/tai-nguyen/van-ban-ve-moi-truong-va-hse",
                           )),
                 );
               },
