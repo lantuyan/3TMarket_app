@@ -44,7 +44,7 @@ class RegisterOrLoginWithPhoneScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(10))),
                 child: Image.asset(
-                  "assets/images/logo_thugom.png",
+                  "assets/images/logo_3tmarket.png",
                 ),
               ),
               Text("Xin chào!",

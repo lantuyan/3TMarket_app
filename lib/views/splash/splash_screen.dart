@@ -14,7 +14,7 @@ class SplashScreen extends GetWidget<SplashController> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/logo_thugom.png',
+              'assets/images/logo_3tmarket.png',
               width: 200.w,
               height: 200.h,
             ),
