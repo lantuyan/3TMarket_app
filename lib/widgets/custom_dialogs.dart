@@ -25,6 +25,11 @@ class CustomDialogs{
       ),
       barrierDismissible: false, // Prevent users from dismissing the dialog by tapping outside
     );
+    Future.delayed(Duration(seconds: 30), () {
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+    });
   }
   static void hideLoadingDialog(){
     Get.back();
@@ -55,38 +60,45 @@ class CustomDialogs{
       margin: EdgeInsets.all(15.sp),
       colorText: Colors.white,
       duration: Duration(seconds: duration),
-      isDismissible: true,
+      isDismissible: false,
       forwardAnimationCurve: Curves.easeOutBack,
     );
   }
 
-  static void confirmDialog(String title,Widget content,Function confirm){
+  static void confirmDialog(String title,Widget content,Function confirm,String okText){
     Get.defaultDialog(
-      contentPadding: EdgeInsets.fromLTRB(12.sp, 12.sp, 12.sp, 12.sp),
+      contentPadding: EdgeInsets.fromLTRB(18.sp, 0.sp, 18.sp, 32.sp),
+      titlePadding: EdgeInsets.fromLTRB(0.sp, 26.sp, 0.sp, 18.sp),
       title: title,
-      titleStyle: AppTextStyles.headline1,
+      titleStyle: AppTextStyles.titleDialog,
       content: content,
+      
       buttonColor: ColorsConstants.kMainColor,
-      cancel: ElevatedButton(
-          onPressed: (){
-            Get.back();
-          },
-          style: CustomButtonStyle.transparentButton,
-          child: Text(
-            'Bỏ qua',
-            style: TextStyle(color: ColorsConstants.kMainColor, fontSize: 16.sp),
-          )
+      cancel: Container(
+        margin: EdgeInsets.only(top: 18.sp),
+        child: ElevatedButton(
+            onPressed: (){
+              Get.back();
+            },
+            style: CustomButtonStyle.transparentButton,
+            child: Text(
+              'Bỏ qua',
+              style: TextStyle(color: ColorsConstants.kMainColor, fontSize: 16.sp),
+            )
+        ),
       ),
-      confirm: ElevatedButton(
-          onPressed: (){
-            confirm();
-
-          },
-          style: CustomButtonStyle.primaryButton,
-          child: Text(
-            'Xác nhận',
-            style: TextStyle(color: ColorsConstants.kBGCardColor, fontSize: 16.sp),
-          )
+      confirm: Container(
+        margin: EdgeInsets.only(top: 18.sp),
+        child: ElevatedButton(
+            onPressed: (){
+              confirm();
+            },
+            style: CustomButtonStyle.primaryButton,
+            child: Text(
+              okText,
+              style: TextStyle(color: ColorsConstants.kBGCardColor, fontSize: 16.sp),
+            )
+        ),
       ),
 
     );

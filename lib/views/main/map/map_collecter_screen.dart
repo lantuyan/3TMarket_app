@@ -6,6 +6,10 @@ import 'package:get_storage/get_storage.dart';
 import 'package:market3t/controllers/map/map_controller.dart';
 import 'package:market3t/shared/constants/color_constants.dart';
 import 'package:market3t/shared/themes/style/app_text_styles.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:market3t/widgets/flutter_map_zoom_buttons.dart';
+import 'package:market3t/widgets/flutter_map_location_button.dart';
+
 
 class MapCollecterScreen extends StatelessWidget {
   MapCollecterScreen({Key? key}) : super(key: key);
@@ -17,10 +21,10 @@ class MapCollecterScreen extends StatelessWidget {
     final user = Get.put(MapController());
     user.userRequest();
     return Obx(() => Scaffold(
-          body: user.activeGPS.value == false
-              ? _buildNoGpsView(user)
-              : _buildMapView(context, user),
-        ));
+      body: user.activeGPS.value == false
+          ? _buildNoGpsView(user)
+          : _buildMapView(context, user),
+    ));
   }
 
   Widget _buildNoGpsView(MapController user) {
@@ -65,6 +69,7 @@ class MapCollecterScreen extends StatelessWidget {
   }
 
   Widget _buildMapView(BuildContext context, MapController user) {
+
     return Scaffold(
       body: Column(
         children: [
@@ -72,109 +77,134 @@ class MapCollecterScreen extends StatelessWidget {
             color: ColorsConstants.kBGCardColor,
             child: _userName(name),
           ),
-          !user.isDataLoaded.value
+          !user.isDataLoaded2.value
               ? Container(
-                  height: MediaQuery.of(context).size.height * 0.3,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: ColorsConstants.kActiveColor,
-                    ),
+            //height: MediaQuery.of(context).size.height * 0.3,
+            //child: Center(
+             // child: CircularProgressIndicator(
+              //  color: ColorsConstants.kActiveColor,
+             // ),
+           // ),
+          )
+              : user.initialPosition == null
+              ? const Center(
+            child: Text(
+              'Không thể tải bản đồ do thiếu thông tin vị trí.',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: ColorsConstants.kActiveColor,
+              ),
+            ),
+          )
+              : Expanded(
+            flex: 4,
+            child: Stack(
+              children: [
+                controller.FlutterMap(
+                  options: controller.MapOptions(
+                    initialCenter: user.initialPosition,
+                    initialZoom: 13,
+                    interactiveFlags: controller.InteractiveFlag.all & ~controller.InteractiveFlag.rotate,
+                    maxZoom: 20,
+                    minZoom: 10,
                   ),
-                )
-              : user.initialPos == null
-                  ? const Center(
-                      child: Text(
-                        'Không thể tải bản đồ do thiếu thông tin vị trí.',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: ColorsConstants.kActiveColor,
+                  children: [
+                    controller.TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    ),
+
+                    if (user.markers_user.isNotEmpty)
+                    MarkerClusterLayerWidget(
+                    options: MarkerClusterLayerOptions(
+                      maxClusterRadius: 45,
+                      size: const Size(40, 40),
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(50),
+                      maxZoom: 15,
+                      markers: user.markers_user,
+                      builder: (context, markers) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.green),
+                        child: Center(
+                        child: Text(
+                          markers.length.toString(),
+                          style: const TextStyle(color: Colors.white),
                         ),
-                      ),
-                    )
-                  : Expanded(
-                      flex: 4,
-                      child: Stack(
-                        children: [
-                          controller.FlutterMap(
-                            options: controller.MapOptions(
-                              initialCenter: user.initialPos,
-                              initialZoom: 16.0,
-                            ),
-                            children: [
-                              controller.TileLayer(
-                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                              ),
-                              controller.MarkerLayer(
-                                markers:[
-                                  controller.Marker(
-                                    point: user.initialPos,
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.redAccent,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              controller.MarkerLayer(markers: user.markers_user),
-                            ],
+                        ),
+                      );
+                      },
+                    ),
+                    ),
+                    controller.MarkerLayer(
+                      markers: [
+                        controller.Marker(
+                          point: user.initialPosition,
+                          child: Icon(
+                            Icons.location_on,
+                            color: Colors.redAccent,
+                            size: 40.sp,
                           ),
-                          Positioned(
-                            top: 20,
-                            right: 20,
-                            child: Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                'Số người yêu cầu thu gom: ${user.markers_user.length}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(right: 16.sp, bottom: 64.sp),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          CurrentLocationButton(
+                            user: user,
+                            padding: 16.sp,
+                            moveToCurrentLocationIcon: Icons.location_on,
+                          ),
+                          FlutterMapZoomButtons(
+                            mini: false,
+                            padding: 16.sp,
+                            zoomInIcon: Icons.add,
+                            zoomOutIcon: Icons.remove,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Số người yêu cầu thu gom: ',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '${user.markers_user.length}',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: ColorsConstants.kActiveColor,
                             ),
                           ),
                         ],
                       ),
                     ),
-          Expanded(
-            flex: 1,
-            child: Obx(() {
-              // Sử dụng isDataLoaded để kiểm tra xem dữ liệu đã tải xong chưa
-              if (!user.isDataLoaded.value) {
-                return Text('Đang tải dữ liệu...');
-              } else {
-                return Container(
-                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Thông tin vị trí',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                      Obx(() {
-                        return Text(
-                          user.currentAddress.value,
-                          style: TextStyle(
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.left,
-                        );
-                      }),
-                    ],
                   ),
-                );
-              }
-            }),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -11,14 +11,14 @@ import 'package:market3t/shared/constants/color_constants.dart';
 import 'package:market3t/shared/themes/style/app_text_styles.dart';
 import 'package:market3t/widgets/custom_dialogs.dart';
 
-class RequestPersonScreen extends StatefulWidget {
-  RequestPersonScreen({super.key});
+class FeedbackScreen extends StatefulWidget {
+  FeedbackScreen({super.key});
 
   @override
-  State<RequestPersonScreen> createState() => _RequestPersonScreenState();
+  State<FeedbackScreen> createState() => _FeedbackScreenState();
 }
 
-class _RequestPersonScreenState extends State<RequestPersonScreen> {
+class _FeedbackScreenState extends State<FeedbackScreen> {
   final RequestPersonController _requestPersonController =
       Get.find<RequestPersonController>();
 
@@ -84,7 +84,7 @@ class _RequestPersonScreenState extends State<RequestPersonScreen> {
                     Center(
                       child: RichText(
                         text: TextSpan(
-                          text: 'Đăng ký thu gom:  ',
+                          text: 'Gửi feedBack: ',
                           style: TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
@@ -169,10 +169,12 @@ class _RequestPersonScreenState extends State<RequestPersonScreen> {
                             .kTextMainColor, // Màu cho giá trị initialValue
                       ),
                       autovalidateMode: AutovalidateMode.disabled,
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(
-                            errorText: "Không được để trống trường này"),
-                      ]),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Không được để trống trường này";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(
                       height: 30.sp,
@@ -205,10 +207,12 @@ class _RequestPersonScreenState extends State<RequestPersonScreen> {
                             .kTextMainColor, // Màu cho giá trị initialValue
                       ),
                       autovalidateMode: AutovalidateMode.disabled,
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(
-                            errorText: "Không được để trống trường này"),
-                      ]),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Không được để trống trường này";
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(
                       height: 30.sp,
@@ -239,15 +243,17 @@ class _RequestPersonScreenState extends State<RequestPersonScreen> {
                         color: ColorsConstants
                             .kTextMainColor, // Màu cho giá trị initialValue
                       ),
-                      autovalidateMode: AutovalidateMode.disabled,
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(
-                            errorText: "Không được để trống trường này"),
-                        FormBuilderValidators.maxLength(11,
-                            errorText: "Số điện thoại không hợp lệ"),
-                        FormBuilderValidators.numeric(
-                            errorText: "Số điện thoại không hợp lệ"),
-                      ]),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Không được để trống trường này";
+                        }
+                        if (value.length < 10 || value.length > 13) {
+                          return "Số điện thoại không hợp lệ";
+                        }
+                        if (int.tryParse(value) == null) {
+                          return "Số điện thoại không hợp lệ";
+                        }
+                      },
                     ),
                     SizedBox(
                       height: 20.sp,
@@ -336,7 +342,7 @@ class _RequestPersonScreenState extends State<RequestPersonScreen> {
                                 _requestPersonController
                                     .addressFieldKey.currentState?.value;
 
-                            _requestPersonController.sendRequestToAppwrite();
+                            _requestPersonController.sendFeedbackToAppwrite();
                           }
                         },
                         child: Text(

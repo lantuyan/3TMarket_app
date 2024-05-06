@@ -15,20 +15,32 @@ class RegisterController extends GetxController {
 
   RegisterController(this._authRepository);
   // Form Key
-  final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
+  final GlobalKey<FormState> formKey = GlobalKey();
   //Get Storage
   final GetStorage _getStorage = GetStorage();
   //Key
-  final nameFieldKey = GlobalKey<FormBuilderFieldState>();
-  final emailFieldKey = GlobalKey<FormBuilderFieldState>();
-  final usernameFieldKey = GlobalKey<FormBuilderFieldState>();
-  final passwordFieldKey = GlobalKey<FormBuilderFieldState>();
-  final confirmPasswordFieldKey = GlobalKey<FormBuilderFieldState>();
+  final nameFieldKey = GlobalKey<FormFieldState>();
+  final emailFieldKey = GlobalKey<FormFieldState>();
+  final usernameFieldKey = GlobalKey<FormFieldState>();
+  final passwordFieldKey = GlobalKey<FormFieldState>();
+  final confirmPasswordFieldKey = GlobalKey<FormFieldState>();
+
+  // final TextEditingController emailController = TextEditingController();
+  // final TextEditingController usernameController = TextEditingController();
+  // final TextEditingController passwordController = TextEditingController();
+  // final TextEditingController confirmPasswordController = TextEditingController();
+
   RxBool passwordVisible = true.obs;
   RxBool confirmPasswordVisible = true.obs;
   RxString roleField = 'person'.obs;
-  Future<void> register(Map<String, dynamic> formData) async {
+  Future<void> register() async {
+
     CustomDialogs.showLoadingDialog();
+    Map<String, dynamic> formData = {
+      "email" : emailFieldKey.currentState!.value.trim(),
+      "username" : '', 
+      "password" : passwordFieldKey.currentState!.value
+    };
     _authRepository.register(formData,roleField.value).then((value) async {
       await _authRepository.login({
         'email': formData['email'],
@@ -41,6 +53,7 @@ class RegisterController extends GetxController {
         await _getStorage.write('role', userModel.role);
         await _getStorage.write('zalonumber', userModel.zalonumber);
         await _getStorage.write('address', userModel.address);
+        await _getStorage.write('uid', userModel.uid);
 
         DataManager().saveData('userId', value.userId);
         DataManager().saveData('sessionId', value.$id);
@@ -48,6 +61,7 @@ class RegisterController extends GetxController {
         DataManager().saveData('name', userModel.name);
         DataManager().saveData('zalonumber', userModel.zalonumber);
         DataManager().saveData('address', userModel.address);
+        DataManager().saveData('uid', userModel.uid);
       });
       Get.offAllNamed('/introPage');
       CustomDialogs.showSnackBar(2, "Đăng ký tài khoàn thành công", 'success');

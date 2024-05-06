@@ -79,7 +79,7 @@ class PersonUI extends StatelessWidget {
         Center(
           child: RichText(
             text: TextSpan(
-              text: 'Đăng ký thu gom:  ',
+              text: 'Đánh giá thu gom:  ',
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -196,16 +196,16 @@ class PersonUI extends StatelessWidget {
                     'Gửi đánh giá',
                     Text(
                       'Gửi đánh giá này cho chúng tôi?',
-                      style: AppTextStyles.bodyText2.copyWith(fontSize: 12.sp),
+                      style: AppTextStyles.bodyText2.copyWith(fontSize: 14.sp),
                       textAlign: TextAlign.center,
                     ), () async {
                   await _requestDetailController
                       .userRating(_requestDetailController.requestId, rating);
                   await Get.offAllNamed('/mainPage');
-                });
+                },"Gửi");
                 print(">>>>>>VALUES: ${rating}");
               },
-              style: CustomButtonStyle.cancelButton,
+              style: CustomButtonStyle.rateButton,
               child: Text(
                 'Gửi đánh giá',
                 style: TextStyle(color: Colors.white, fontSize: 18.sp),

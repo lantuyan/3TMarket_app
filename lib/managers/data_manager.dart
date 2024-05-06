@@ -20,7 +20,7 @@ class DataManager {
  String getData(String key) {
   return dataUser[key] ?? '';
  }
- // func clear data
+
   void clearData() {
     dataUser.clear();
   }

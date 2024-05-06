@@ -10,6 +10,9 @@ class AppWriteConstants {
   static String collection_point_Id = "6603cb16429e3663c197";
   static String userRequestTrashCollection = "6603cb2a9d85833c8a95";
 
+  static String settingInformationCollection = "6603cb0d3c33f6e10ecc";
+  static String userFeedbackTrashCollection = "662a400d4e44bc97383e";
+
   static String categoryCollectionId = "6603cb070b1f8dcf178f";
   static String categoryPriceCollectionId = "6603cafdadafec75a288";
   static String categoryBucketId = "6603cb8b56ec61b719aa";
@@ -19,4 +22,6 @@ class AppWriteConstants {
 
   static String trashBucketId = "";
   static String categoryDetailCollectionId = "";
+
+  static String categoryPointsCollectionId = "662a3ece26dc74266b03";
 }

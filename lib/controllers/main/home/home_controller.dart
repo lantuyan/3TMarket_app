@@ -349,7 +349,7 @@ class HomeController extends GetxController {
         _getStorage.remove('sessionId');
         _getStorage.remove('name');
         _getStorage.remove('role');
-        _getStorage.remove('zalonumber');
+         _getStorage.remove('zalonumber');
         _getStorage.remove('address');
         DataManager().clearData();
         Get.offAllNamed('/landingPage');

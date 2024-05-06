@@ -1,17 +1,51 @@
 import 'dart:async';
-
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:market3t/managers/data_manager.dart';
-import 'package:market3t/providers/auth_provider.dart';
-import 'package:market3t/widgets/custom_dialogs.dart';
 
+import 'package:market3t/providers/auth_provider.dart';
+
+import 'package:market3t/models/infomation/setting_infomation.dart';
+import 'package:market3t/models/trash/category_model.dart';
+import 'package:market3t/models/trash/user_request_trash_model.dart';
+import 'package:market3t/providers/auth_provider.dart';
+import 'package:market3t/repositories/category_reponsitory.dart';
+import 'package:market3t/repositories/infomation_reposistory.dart';
+
+import 'package:market3t/repositories/user_request_trash_reponsitory.dart';
+import 'package:market3t/widgets/custom_dialogs.dart';
 // import 'package:uni_links/uni_links.dart';
 
 class InfomationController extends GetxController {
-  InfomationController();
-
   final GetStorage _getStorage = GetStorage();
+  final InfomationReposistory _infomationReposistory;
+
+  InfomationController(this._infomationReposistory);
+
+  late SettingInformation mainSettingInfommation;
+  List<SettingInformation> settingList = [];
+
+  @override
+  Future<void> onInit() async {
+    print("mainSettingInfommation oninit");
+    getSettingInfomation();
+    super.onInit();
+  }
+
+  Future<void> getSettingInfomation() async {
+    try {
+      await _infomationReposistory.getInfomationSetting().then((value) {
+        print('value $value');
+        Map<String, dynamic> data = value.toMap();
+        List documents = data['documents'].toList();
+        settingList = documents.map((e) => SettingInformation.fromMap(e['data'])).toList();
+        print('settingList $settingList');
+      });
+    } catch (e) {
+      print("settingList false ${e}");
+      print(e);
+    }
+  }
 
   Future<void> logOut() async {
     CustomDialogs.showLoadingDialog();
@@ -30,11 +64,15 @@ class InfomationController extends GetxController {
         print("Error: $onError");
         CustomDialogs.hideLoadingDialog();
         CustomDialogs.showSnackBar(2, "wrong".tr, 'error');
+        DataManager().clearData();
+        Get.offAllNamed('/landingPage');
       });
     } catch (error) {
       print("Error: $error");
       CustomDialogs.hideLoadingDialog();
       CustomDialogs.showSnackBar(2, "wrong".tr, 'error');
+      DataManager().clearData();
+      Get.offAllNamed('/landingPage');
     }
   }
 }

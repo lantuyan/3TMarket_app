@@ -139,10 +139,8 @@ class UserRequestTrashProvider {
     // final GetStorage _getStorage = GetStorage();
     // final userID = _getStorage.read('userId');
     final subscription = realtime.subscribe(
-      [
-        'collections.${AppWriteConstants.userRequestTrashCollection}'
-      ]);
-    
+        ['collections.${AppWriteConstants.userRequestTrashCollection}']);
+
     subscription.stream.listen((response) {
       print('event: $response');
     });
@@ -158,12 +156,39 @@ class UserRequestTrashProvider {
     // return response;
   }
 
-  Future<void> sendComfirmPhoto(String requestId, String? photoConfirm) async {
+  Future<void> sendComfirmInfo(String requestId, String? photoConfirm,
+      String? amount_collected, String? collection_price, String? userId) async {
     await databases?.updateDocument(
       databaseId: AppWriteConstants.databaseId,
       collectionId: AppWriteConstants.userRequestTrashCollection,
       documentId: requestId,
-      data: {'finishImage': photoConfirm, 'status': 'confirming'},
+      data: {
+        'finishImage': photoConfirm,
+        'amount_collected': amount_collected,
+        'collection_price': collection_price,
+        'status': 'confirming'
+      },
+    );
+    if(userId != null){
+      //Xóa request process của user
+      await databases.updateDocument(
+        databaseId: AppWriteConstants.databaseId,
+        collectionId: AppWriteConstants.usersCollection,
+        documentId: userId,
+        data: {
+          'requestProcess': '',
+        },
+      );
+    }
+  }
+  Future<void> updateAvatarCollector(String requestId, String? imageLink) async {
+    await databases?.updateDocument(
+      databaseId: AppWriteConstants.databaseId,
+      collectionId: AppWriteConstants.usersCollection,
+      documentId: requestId,
+      data: {
+        'avatar': imageLink
+      },
     );
   }
 
@@ -193,6 +218,12 @@ class UserRequestTrashProvider {
       documentId: requestId,
       data: {'confirm': userId, 'status': 'processing'},
     );
+    await databases.updateDocument(
+      databaseId: AppWriteConstants.databaseId,
+      collectionId: AppWriteConstants.usersCollection,
+      documentId: userId,
+      data: {'requestProcess': requestId},
+    );
   }
 
   Future<models.Document> checkConfirmRequest(String requestId) async {
@@ -200,6 +231,15 @@ class UserRequestTrashProvider {
       databaseId: AppWriteConstants.databaseId,
       collectionId: AppWriteConstants.userRequestTrashCollection,
       documentId: requestId,
+    );
+    return result;
+  }
+
+  Future<models.Document> checkRequestProcess(String userId) async {
+    final result = await databases.getDocument(
+      databaseId: AppWriteConstants.databaseId,
+      collectionId: AppWriteConstants.usersCollection,
+      documentId: userId,
     );
     return result;
   }
@@ -229,6 +269,28 @@ class UserRequestTrashProvider {
       print("sendRequestToAppwrite");
     } catch (e) {
       print("sendRequestToAppwrite error: $e");
+    }
+  }
+
+  Future sendFeedbackToAppwrite(
+      UserRequestTrashModel userRequestTrashModel) async {
+    try {
+      await databases.createDocument(
+          databaseId: AppWriteConstants.databaseId,
+          collectionId: AppWriteConstants.userFeedbackTrashCollection,
+          documentId: userRequestTrashModel.requestId,
+          data: {
+            "senderId": userRequestTrashModel.senderId,
+            "image": userRequestTrashModel.image,
+            "phone_number": userRequestTrashModel.phone_number,
+            "address": userRequestTrashModel.address,
+            "description": userRequestTrashModel.description,
+            "point_lat": userRequestTrashModel.point_lat,
+            "point_lng": userRequestTrashModel.point_lng,
+            "createAt": userRequestTrashModel.createAt,
+          });
+    } catch (e) {
+      print("sendFeedbackToAppwrite error: $e");
     }
   }
 
@@ -293,7 +355,11 @@ class UserRequestTrashProvider {
       TextCellValue('createAt'),
       TextCellValue('updateAt'),
       TextCellValue('point_lat'),
-      TextCellValue('point_lng')
+      TextCellValue('point_lng'), 
+      TextCellValue('finishImage'),
+      TextCellValue('rating'),
+      TextCellValue('collection_price'),
+      TextCellValue('amount_collected'),
     ]);
     sheet.appendRow([]);
 
@@ -313,6 +379,10 @@ class UserRequestTrashProvider {
         TextCellValue(document.data['updateAt'] ?? ''),
         TextCellValue(document.data['point_lat'].toString()),
         TextCellValue(document.data['point_lng'].toString()),
+        TextCellValue(document.data['finishImage'] ?? ''),
+        TextCellValue(document.data['rating'].toString()),
+        TextCellValue(document.data['collection_price'].toString()),
+        TextCellValue(document.data['amount_collected'].toString()),
       ]);
 
       // break line

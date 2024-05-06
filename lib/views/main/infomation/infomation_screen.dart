@@ -1,30 +1,33 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:market3t/controllers/main/home/home_controller.dart';
 import 'package:market3t/controllers/main/infomation/infomation_controller.dart';
+import 'package:market3t/providers/infomation_provider.dart';
+import 'package:market3t/repositories/infomation_reposistory.dart';
 import 'package:market3t/shared/constants/color_constants.dart';
 import 'package:market3t/shared/themes/style/app_text_styles.dart';
 import 'package:market3t/widgets/header_username.dart';
 import 'package:market3t/widgets/web_view.dart';
 
 class InfomationScreen extends StatelessWidget {
-  InfomationScreen({Key? key}) : super(key: key);
   final GetStorage _getStorage = GetStorage();
-  final InfomationController _homeController = Get.put(InfomationController());
+  final InfomationController _infomationController = Get.put(InfomationController(InfomationReposistory(InfomationProvider())));
+
   var name = '';
+
   @override
   Widget build(BuildContext context) {
     name = _getStorage.read('name');
     return Scaffold(
       appBar: _getStorage.read('role') == 'admin'
           ? AppBar(
-        title: Container(
-            color: ColorsConstants.kBGCardColor,
-            child: userName(name),
-          ),
-      )
+              title: Container(
+                color: ColorsConstants.kBGCardColor,
+                child: userName(name),
+              ),
+            )
           : null,
       backgroundColor: ColorsConstants.kBackgroundColor,
       body: SingleChildScrollView(
@@ -32,10 +35,11 @@ class InfomationScreen extends StatelessWidget {
         // width: MediaQuery.of(context).size.width,
         child: Column(
           children: [
-            if (_getStorage.read('role') != 'admin') Container(
-                  color: ColorsConstants.kBGCardColor,
-                  child: _userName(name),
-                ),
+            if (_getStorage.read('role') != 'admin')
+              Container(
+                color: ColorsConstants.kBGCardColor,
+                child: _userName(name),
+              ),
             SizedBox(
               height: 8.h,
             ),
@@ -46,8 +50,7 @@ class InfomationScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => WebViewPage(
-                            url:
-                                "https://baotainguyenmoitruong.vn/da-nang-trien-khai-luat-bao-ve-moi-truong-cho-cac-doanh-nghiep-khu-cong-nghiep-363363.html",
+                            url: _infomationController.settingList[0].link,
                           )),
                 );
               },
@@ -63,11 +66,16 @@ class InfomationScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Hình ảnh
-                          Image.asset(
-                            'assets/images/blog_1.jpg', // Đường dẫn của hình ảnh
+                          Image.network(
+                            _infomationController.settingList[0].imageLink,
                             height: 80, // Độ cao của hình ảnh
                             width: 80, // Độ rộng của hình ảnh
                             fit: BoxFit.cover, // Hiển thị hình ảnh đúng tỷ lệ
+                            loadingBuilder: (context, child, loadingProgress) => loadingProgress == null
+                          ? child
+                          : Center(
+                              child: Image.asset("assets/images/placeholder.png")
+                            ),
                           ),
                           SizedBox(
                               width:
@@ -78,13 +86,13 @@ class InfomationScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Luật bảo vệ môi trường',
+                                 _infomationController.settingList[0].title,
                                   style: AppTextStyles.headline1,
                                 ),
                                 const SizedBox(height: 16.0),
                                 Text(
-                                  'Môi trường bao gồm các yếu tố vật chất tự nhiên và nhân tạo quan hệ mật thiết với nhau, bao quanh con người, có ảnh hưởng đến đời sống, kinh tế, xã hội, sự tồn tại, phát triển của con người, sinh vật và tự nhiên.',
-                                  style: AppTextStyles.bodyText1,
+                                  _infomationController.settingList[0].description ?? "",
+                                  style: AppTextStyles.bodyText2,
                                   textAlign: TextAlign.justify,
                                 ),
                               ],
@@ -101,69 +109,38 @@ class InfomationScreen extends StatelessWidget {
               height: 8.h,
             ),
             ProfileCardInfomation(
-              image: 'assets/images/trash_bin.png',
+              image: 'assets/images/log_out.png',
+              color: ColorsConstants.kDangerous,
+              tapHandler: () {
+                Get.toNamed('/feedbackTrashPage', arguments: {
+                  'categoryId': "",
+                  'categoryTitle': 'Phản ánh rác thải',
+                  'categoryImage': ""
+                });
+              },
+              title: 'Phản ánh rác thải',
+            ),
+            for (int i = 1; i < _infomationController.settingList.length; i++)
+              ProfileCardInfomation(
+              image: _infomationController.settingList[i].imageLink,
               color: ColorsConstants.kActiveColor,
               tapHandler: () {
                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => WebViewPage(
-                            url:
-                                "https://stnmt.thuathienhue.gov.vn/thong-tin-chi-dao-dieu-hanh/trien-khai-thuc-hien-cac-quy-dinh-ve-bao-ve-moi-truong.html",
-                          )),
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WebViewPage(
+                  url: _infomationController.settingList[i].link,
+                  ),
+                ),
                 );
               },
-              title: 'Thông báo phí thu gom',
-            ),
-            ProfileCardInfomation(
-              image: 'assets/images/check_user.png',
-              color: ColorsConstants.kActiveColor,
-              tapHandler: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => WebViewPage(
-                            url:
-                                "https://stp.thuathienhue.gov.vn/?gd=26&cn=350&tc=3769",
-                          )),
-                );
-              },
-              title: 'Thông tư số 01',
-            ),
-            ProfileCardInfomation(
-              image: 'assets/images/check_user.png',
-              color: ColorsConstants.kActiveColor,
-              tapHandler: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => WebViewPage(
-                            url:
-                                "https://tnmt.danang.gov.vn/bai-viet/chi-tiet?id=3438&u=capnhapcacvanbanmoicuabotainguyenvamoitruong",
-                          )),
-                );
-              },
-              title: 'Thông tư số 02',
-            ),
-            ProfileCardInfomation(
-              image: 'assets/images/noti_user.png',
-              color: ColorsConstants.kActiveColor,
-              tapHandler: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => WebViewPage(
-                            url: "https://khoamoitruonghue.edu.vn/tai-nguyen/van-ban-ve-moi-truong-va-hse",
-                          )),
-                );
-              },
-              title: 'Liên hệ',
-            ),
+              title: _infomationController.settingList[i].title,
+              ),
             ProfileCardInfomation(
               image: 'assets/images/log_out.png',
               color: ColorsConstants.kDangerous,
               tapHandler: () {
-                _homeController.logOut();
+                _infomationController.logOut();
               },
               title: 'Đăng xuất',
             ),
@@ -175,7 +152,7 @@ class InfomationScreen extends StatelessWidget {
 
   Padding _userName(String name) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.sp),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.sp),
       child: Row(
         children: [
           SizedBox(
@@ -198,7 +175,8 @@ class InfomationScreen extends StatelessWidget {
             child: Text(
               "Xin chào, " + name,
               style: AppTextStyles.headline1,
-              overflow: TextOverflow.ellipsis, // Truncate văn bản nếu vượt quá khung
+              overflow:
+                  TextOverflow.ellipsis, // Truncate văn bản nếu vượt quá khung
               maxLines: 1, // Giới hạn số dòng hiển thị
             ),
           )
@@ -223,6 +201,23 @@ class ProfileCardInfomation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget imageWidget;
+    if (image.startsWith('http')) {
+      imageWidget = Image.network(
+        image,
+        color: color,
+        width: 20.sp,
+        height: 20.sp,
+      );
+    } else {
+      imageWidget = Image.asset(
+        image,
+        color: color,
+        width: 20.sp,
+        height: 20.sp,
+      );
+    }
+
     return GestureDetector(
       onTap: () {
         tapHandler();
@@ -244,12 +239,7 @@ class ProfileCardInfomation extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: Image.asset(
-                      image,
-                      color: color,
-                      width: 20.sp,
-                      height: 20.sp,
-                    ),
+                    child: imageWidget,
                   ),
                   SizedBox(
                     width: 32.sp,

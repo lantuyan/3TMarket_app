@@ -29,7 +29,7 @@ class App extends StatelessWidget {
             defaultTransition: Transition.noTransition,
             useInheritedMediaQuery: true,
             debugShowCheckedModeBanner: false,
-            title: '3TMarket',
+            title: 'Thu Gom',
             // theme: Themes.lightTheme,
             // darkTheme: Themes.darkTheme,
             // themeMode: getThemeMode(themeController.theme),

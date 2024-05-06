@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:market3t/controllers/main/main_controller.dart';
+import 'package:market3t/providers/user_provider.dart';
+import 'package:market3t/repositories/user_reposistory.dart';
 import 'package:market3t/shared/constants/color_constants.dart';
 import 'package:market3t/shared/constants/icon_constants.dart';
 import 'package:zoom_tap_animation/zoom_tap_animation.dart';
@@ -15,7 +17,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final MainController _mainController = Get.find<MainController>();
+  final MainController _mainController = Get.put(MainController(UserRepository(UserProvider())));
 
   @override
   Widget build(BuildContext context) {

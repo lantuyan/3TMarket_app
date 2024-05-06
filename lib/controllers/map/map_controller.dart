@@ -1,37 +1,49 @@
+import 'dart:typed_data';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:market3t/managers/data_manager.dart';
 import 'package:market3t/models/trash/user_request_trash_model.dart';
 import 'package:market3t/shared/constants/appwrite_constants.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:market3t/shared/constants/color_constants.dart';
+import 'package:market3t/shared/themes/style/app_text_styles.dart';
+import 'package:market3t/shared/themes/style/custom_button_style.dart';
+import 'package:market3t/widgets/custom_dialogs.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 
 class MapController extends GetxController {
-  late LatLng _initialPosition = LatLng(16.0544, 108.2034);
-  LatLng get initialPos => _initialPosition;
+  late LatLng initialPosition = LatLng(16.0544, 108.2034);
+  LatLng get initialPos => initialPosition;
 
   var activeGPS = true.obs;
   var shouldShowMarkers = false.obs;
 
   RxString currentAddress = ''.obs;
+  RxString phonenumber = ''.obs;
   RxString labels = ''.obs;
-  RxString infos = ''.obs;
+  RxString info1 = ''.obs;
+  RxString info2 = ''.obs;
+  Map<String, Uint8List> labelToIconMap = {};
 
   late final client = Client()
       .setEndpoint(AppWriteConstants.endPoint)
       .setProject(AppWriteConstants.projectId);
   // user
-  late Databases collection_points;
+  late Databases points;
   List<Marker> markers = [];
   //collecter
   late Databases user_request;
   List<Marker> markers_user = [];
   //static
-  List<Marker> static_user_done = [];
-  List<Marker> static_user_not = [];
+  List<Marker> static_user_done = <Marker>[].obs;
+  List<Marker> static_user_not = <Marker>[].obs;
   DateTime startTime = DateTime.now();
   DateTime endTime = DateTime.now();
 
@@ -39,20 +51,31 @@ class MapController extends GetxController {
   var isDataLoaded2 = false.obs;
   var isDataLoaded3 = false.obs;
 
+  final GetStorage _getStorage = GetStorage();
 
   @override
   void onInit() async {
     super.onInit();
+    String role = await _getStorage.read('role');
     await getUserLocation();
-    await userRequest();
-    await loadMarkersCollecter();
+    if (role == 'person') {
+      await loadMarkersCollecter();
+    }else
+    if (role == 'collector') {
+      await userRequest();
+    }else
+    if (role == 'admin') {
+      await statistical(startTime, endTime);
+    }
   }
 
   void filterDataByTime() {
     statistical(startTime, endTime);
   }
 
+  // lấy vị trí hiện tại của người dùng
   Future<void> getUserLocation() async {
+    CustomDialogs.showLoadingDialog();
     if (!(await Geolocator.isLocationServiceEnabled())) {
       activeGPS.value = false;
     } else {
@@ -71,107 +94,125 @@ class MapController extends GetxController {
       }
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      _initialPosition = LatLng(position.latitude, position.longitude);
+      initialPosition = LatLng(position.latitude, position.longitude);
 
-      // Sau khi _initialPosition được khởi tạo, cập nhật biến isDataLoaded
+      // Sau khi initialPosition được khởi tạo, cập nhật biến isDataLoaded
       // isDataLoaded.value = true;
       update(); // Cần gọi update để cập nhật UI
     }
   }
-
+  // chức năng hiển thị các điểm thu gom của thành phố đà nẵng ở map person gồm MRF,Trạm thu mua và green house ...
   Future<void> loadMarkersCollecter() async {
     try {
-      collection_points = Databases(client);
-      models.DocumentList documentList = await collection_points.listDocuments(
+      // danh sách của collection_points
+      final Storage storage = Storage(client);
+      points = Databases(client);
+      // danh sách của category points
+      models.DocumentList category_points_List = await points.listDocuments(
+          databaseId: AppWriteConstants.databaseId,
+          collectionId: AppWriteConstants.categoryPointsCollectionId,
+          queries: [
+            Query.limit(10),
+            Query.offset(0)
+          ]
+      );
+      // vòng for để lưu các icon dựa trên label
+      for (var document in category_points_List.documents) {
+        Map<String, dynamic> data = document.data as Map<String, dynamic>;
+        String label = data['Label'];
+        String iconUrl = data['Icon']; // Đường dẫn URL của ảnh
+
+        // Tải ảnh từ URL
+        var response = await http.get(Uri.parse(iconUrl));
+        if (response.statusCode == 200) {
+          Uint8List imageData = response.bodyBytes;
+          labelToIconMap[label] = imageData; // Lưu trữ ảnh vào labelToIconMap
+        } else {
+          print('Failed to load image for label: $label');
+        }
+      }
+
+      models.DocumentList pointsList = await points.listDocuments(
         databaseId: AppWriteConstants.databaseId,
         collectionId: AppWriteConstants.collection_point_Id,
-        queries: [
+          queries: [
             Query.limit(1000),
             Query.offset(0)
-        ]
+          ]
       );
 
-      for (var document in documentList.documents) {
+      // vòng for để xét các địa điểm vào các marker tương ứng
+      for (var document in pointsList.documents) {
         Map<String, dynamic> data = document.data as Map<String, dynamic>;
         double latitude = data['point_lat'];
         double longitude = data['point_lng'];
         String address = data['address'];
         String label = data['label'];
         String info = data['info'] ?? "";
-        if (data['info'] != null) {
-          info = data['info'];
-        } else {
-          // Xử lý khi 'info' là null
-          info = "Không có thông tin";
-        }
-        Marker marker = Marker(
-          point: LatLng(latitude, longitude),
-          child: GestureDetector(
-            onTap: () {
-              currentAddress.value = address;
-              labels.value = label;
-              infos.value = info;
-              openGoogleMapsApp(_initialPosition.latitude,
-                  _initialPosition.longitude, latitude, longitude);
-            },
-            child: Image.asset(
-              'assets/images/bin.jpg',
-              height: 10,
-              width: 10,
+        // kiểm tra xem label của points và category points có giống nhau hay không
+        // nếu giống thì gán imageData với icon tương ứng của label - category points
+        if (labelToIconMap.containsKey(label)) {
+          Uint8List? imageData = labelToIconMap[label];
+          Marker marker = Marker(
+            height: 35.sp,
+            width: 35.sp,
+            point: LatLng(latitude, longitude),
+            child: GestureDetector(
+              onTap: () {
+                List<String> infoParts = info.split('Liên hệ:');
+                currentAddress.value = address;
+                info1.value = infoParts.length > 0 ? infoParts[0].trim() : ""; // Phần đầu tiên
+                info2.value = infoParts.length > 1 ? 'Liên hệ:' + infoParts[1].trim() : ""; // Phần thứ hai
+                // openGoogleMapsApp(initialPosition.latitude,
+                //     initialPosition.longitude, latitude, longitude);
+                showSheetPerson(Get.context, latitude, longitude);
+              },
+              child: Image.memory(
+                imageData!,
+                height: 10,
+                width: 10,
+              ),
             ),
-          ),
-        );
-        markers.add(marker);
+          );
+          markers.add(marker);
+        }
       }
       isDataLoaded.value = true;
       shouldShowMarkers.value = true;
       update();
-
     } catch (e) {
       print('Error!!! $e');
+    } finally {
+      CustomDialogs.hideLoadingDialog();
     }
   }
-
+  // chức năng hiển thị các yêu cầu của người dùng bên map collector
   Future<void> userRequest() async {
-
     try {
       user_request = Databases(client);
       models.DocumentList documentlistUser = await user_request.listDocuments(
         databaseId: AppWriteConstants.databaseId,
         collectionId: AppWriteConstants.userRequestTrashCollection,
-        queries: [
-            Query.limit(1000),
+          queries: [
+            Query.limit(10000),
             Query.offset(0)
-        ]
+          ]
       );
       markers_user.clear();
       for (var documents in documentlistUser.documents) {
         Map<String, dynamic> data = documents.data as Map<String, dynamic>;
-        double? pointLat = data['point_lat'] as double?;
-        double? pointLng = data['point_lng'] as double?;
-        String address = data['address'];
-        String senderId = data['senderId'];
-        String trash_type = data['trash_type'];
-        String image = data['image'];
-        String? description = data['description'] as String?;
-        String phone_number = data['phone_number'];
-        String status = data['status'];
-        String createAt = data['createAt'];
-        String updateAt = data['updateAt'];
-
-
-        UserRequestTrashModel request = UserRequestTrashModel(senderId: senderId,
-          address: address, trash_type: trash_type, image: image, description: description!,
-          phone_number: phone_number, point_lat: pointLat!, point_lng: pointLng!, status: status, createAt: createAt, updateAt: updateAt, requestId: ''
-        );
-        if (status == 'pending')
+        UserRequestTrashModel request = UserRequestTrashModel.fromMap(data);
+        if (request.status == 'pending')
         {
           Marker marker = Marker(
-            point: LatLng(pointLat!, pointLng!),
+            height: 35.sp,
+            width: 35.sp,
+            point: LatLng(request.point_lat, request.point_lng),
             child: GestureDetector(
               onTap: () {
-                currentAddress.value = address;
-                requestDetail(request);
+                phonenumber.value = request.phone_number;
+                currentAddress.value = request.address;
+                showSheetCollector(Get.context, request.point_lat, request.point_lng , request);
               },
               child: Image.asset(
                 'assets/images/bin.jpg',
@@ -188,41 +229,28 @@ class MapController extends GetxController {
       update();
     } catch (e) {
       print('Error!!! $e');
+    } finally {
+      CustomDialogs.hideLoadingDialog();
     }
   }
 
+  // chức năng thống kê người dùng ở admin map
   Future<void> statistical(DateTime startTime, DateTime endTime) async {
     try {
       user_request = Databases(client);
-      models.DocumentList documentlistUser = await user_request.listDocuments(
+      models.DocumentList listRequest = await user_request.listDocuments(
         databaseId: AppWriteConstants.databaseId,
         collectionId: AppWriteConstants.userRequestTrashCollection,
-        queries: [
-            Query.limit(1000),
+          queries: [
+            Query.limit(10000),
             Query.offset(0)
-        ]
+          ]
       );
       static_user_done.clear();
       static_user_not.clear();
-      for (var documents in documentlistUser.documents) {
+      for (var documents in listRequest.documents) {
         Map<String, dynamic> data = documents.data as Map<String, dynamic>;
-        // double pointLat = data['point_lat'] as double;
-        // double pointLng = data['point_lng'] as double;
-        // String address = data['address'];
-        // String senderId = data['senderId'];
-        // String trash_type = data['trash_type'];
-        // String image = data['image'];
-        // String description = data['description'] as String;
-        // String phone_number = data['phone_number'];
-        // String status = data['status'];
-        // String date = data['createAt'];
-        // String updateAt = data['updateAt'];
-        // String? finishImage = data['finishImage'] as String?;
-        // double? rating = data['rating'] as double?;
-        // UserRequestTrashModel request = UserRequestTrashModel(senderId: senderId,
-        //     address: address, trash_type: trash_type, image: image, description: description,
-        //     phone_number: phone_number, point_lat: pointLat, point_lng: pointLng, status: status, createAt: date, updateAt: updateAt, requestId: '', finishImage: finishImage!, rating: rating!);
-          UserRequestTrashModel request = UserRequestTrashModel.fromMap(data);
+        UserRequestTrashModel request = UserRequestTrashModel.fromMap(data);
         DateTime documentDateTime = DateTime.parse(request.createAt);
         if (documentDateTime.isAfter(startTime) && documentDateTime.isBefore(endTime)) {
           if (request.status == 'pending' || request.status == 'processing') {
@@ -230,7 +258,9 @@ class MapController extends GetxController {
               point: LatLng(request.point_lat, request.point_lng),
               child: GestureDetector(
                 onTap: () {
-                  requestDetail(request);
+                  phonenumber.value = request.phone_number;
+                  currentAddress.value = request.address;
+                  showSheetAdmin(Get.context, request.point_lat, request.point_lng);
                 },
                 child: Image.asset(
                   'assets/images/bin.jpg',
@@ -242,12 +272,15 @@ class MapController extends GetxController {
             static_user_not.add(marker);
           }
           // Thêm marker vào danh sách tương ứng
+
           else if(request.status == 'finish' || request.status == 'confirming') {
             Marker marker = Marker(
               point: LatLng(request.point_lat, request.point_lng),
               child: GestureDetector(
                 onTap: () {
-                  requestDetail(request);
+                  phonenumber.value = request.phone_number;
+                  currentAddress.value = request.address;
+                  showSheetAdmin(Get.context, request.point_lat, request.point_lng);
                 },
                 child: Image.asset(
                   'assets/images/bin1.jpg',
@@ -258,6 +291,7 @@ class MapController extends GetxController {
             );
             static_user_done.add(marker);
           }
+
         }
       }
       isDataLoaded3.value = true;
@@ -265,70 +299,303 @@ class MapController extends GetxController {
       update();
     } catch (e) {
       print('Error!!! $e');
+    } finally {
+      CustomDialogs.hideLoadingDialog();
     }
   }
-  Future<void> openGoogleMapsApp(
-      double startLat, double startLng, double endLat, double endLng) async {
-    showDialog(
-      context: Get.context!,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Xác nhận di chuyển"),
-          content: Text("Bạn có chắc chắn muốn di chuyển đến đích này không?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Đóng dialog
-              },
-              child: Text("Hủy"),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // Đóng dialog
-                final url = Uri.parse(
-                    'https://www.google.com/maps/dir/?api=1&origin=$startLat,$startLng&destination=$endLat,$endLng');
-                try {
-                  await launchUrl(url);
-                } catch (e) {
-                  print('Error launching Google Maps: $e');
-                }
-              },
-              child: Text("Đồng ý"),
-            ),
-          ],
-        );
-      },
-    );
+
+  // chức năng chuyển hướng googlemap
+  void openGoogleMapsApp( double startLat, double startLng, double endLat, double endLng) {
+    CustomDialogs.confirmDialog(
+          'Xác nhận di chuyển',
+          Text(
+            'Bạn có chắc chắn muốn di chuyển đến đích này không?',
+            style: AppTextStyles.bodyText2
+                .copyWith(fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ), () {
+        Get.back();
+        final url = Uri.parse(
+            'https://www.google.com/maps/dir/?api=1&origin=$startLat,$startLng&destination=$endLat,$endLng');
+        try {
+          launchUrl(url);
+        } catch (e) {
+          CustomDialogs.showSnackBar(2, "Đã có lỗi xảy ra vui lòng thử lại sau!", 'error');
+        }
+      },"Xác nhận");
   }
 
-  Future<void> requestDetail(
-      dynamic request) async {
-    showDialog(
-      context: Get.context!,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Chi tiết yêu cầu"),
-          content: Text("Bạn muốn xem yêu cầu chi tiết?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Đóng dialog
-              },
-              child: Text("Hủy"),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // Đóng dialog
-                Get.toNamed('requestDetailPage', arguments: {
-                  'requestDetail': request
-                });
-              },
-              child: Text("Xác nhận"),
-            ),
-          ],
-        );
-      },
-    );
+  // gọi đến yêu cầu chi tiết của người dùng
+  void requestDetail(dynamic request) {
+    CustomDialogs.confirmDialog(
+          'Chi tiết yêu cầu',
+          Text(
+            'Bạn muốn xem yêu cầu chi tiết?',
+            style: AppTextStyles.bodyText2
+                .copyWith(fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ), () {
+        Get.back();
+        Get.toNamed('requestDetailPage', arguments: {
+          'requestDetail': request
+        });
+      },"Xác nhận");
   }
 
+  void showSheetPerson(context, double latitude, double longitude) {
+  showModalBottomSheet(context: context, builder: (BuildContext bc) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsConstants.kMainColor,
+                padding: EdgeInsets.fromLTRB(20.sp, 10.sp, 20.sp, 10.sp),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: (){
+                openGoogleMapsApp(initialPosition.latitude,
+                    initialPosition.longitude, latitude, longitude);
+              },
+              child: Text("Chỉ đường", style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.sp,
+              ))),
+              IconButton(
+                style: CustomButtonStyle.transparentButton,
+                onPressed: (){
+                  Navigator.pop(context);
+                },
+                icon: Icon(Icons.close, color: ColorsConstants.kActiveColor, size: 30.sp),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.sp),
+          Center(
+            child: Text(
+              'Thông tin vị trí',
+              style: TextStyle(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w700,
+              )
+            ),
+          ),
+          SizedBox(height: 18.sp),
+          Row(
+            children:[
+              Icon(Icons.location_on, color: ColorsConstants.kActiveColor, size: 30.sp),
+              SizedBox(width: 12.sp),
+              Expanded(
+                child: Text(currentAddress.value, style: TextStyle(
+                  fontSize: 16.sp,
+                  color: ColorsConstants.kActiveColor,
+                )),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.sp),
+          Row(
+            children:[
+              Icon(Icons.info, color: ColorsConstants.kActiveColor, size: 30.sp),
+              SizedBox(width: 12.sp),
+              Expanded(
+                child: Text(info1.value, style: TextStyle(
+                  fontSize: 16.sp,
+                  color: ColorsConstants.kActiveColor,
+                )),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.sp),
+          Row(
+            children:[
+              Icon(Icons.phone, color: ColorsConstants.kActiveColor, size: 30.sp),
+              SizedBox(width: 12.sp),
+              Expanded(
+                child: Text(info2.value, style: TextStyle(
+                  fontSize: 16.sp,
+                  color: ColorsConstants.kActiveColor,
+                )),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  });
+}
+
+  void showSheetCollector(context, double latitude, double longitude ,dynamic request) {
+    showModalBottomSheet(context: context, builder: (BuildContext bc) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        child: Column(
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(124.sp, 40.sp),
+                      backgroundColor: ColorsConstants.kMainColor,
+                      padding: EdgeInsets.fromLTRB(20.sp, 10.sp, 20.sp, 10.sp),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: (){
+                      openGoogleMapsApp(initialPosition.latitude,
+                          initialPosition.longitude, latitude, longitude);
+                    },
+                    child: Text("Chỉ đường", style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18.sp,
+                    ))),
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(124.sp, 40.sp),
+                      backgroundColor: ColorsConstants.kMainColor,
+                      padding: EdgeInsets.fromLTRB(20.sp, 10.sp, 20.sp, 10.sp),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: (){
+                      requestDetail(request);
+                    },
+                    child: Text("Chi tiết", style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18.sp,
+                    ))),
+                IconButton(
+                  style: CustomButtonStyle.transparentButton,
+                  onPressed: (){
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.close, color: ColorsConstants.kActiveColor, size: 30.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.sp),
+            Center(
+              child: Text(
+                  'Thông tin vị trí',
+                  style: TextStyle(
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w700,
+                  )
+              ),
+            ),
+            SizedBox(height: 18.sp),
+            Row(
+              children:[
+                Icon(Icons.location_on, color: ColorsConstants.kActiveColor, size: 30.sp),
+                SizedBox(width: 12.sp),
+                Expanded(
+                  child: Text(currentAddress.value, style: TextStyle(
+                    fontSize: 16.sp,
+                    color: ColorsConstants.kActiveColor,
+                  )),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.sp),
+            Row(
+              children:[
+                Icon(Icons.phone, color: ColorsConstants.kActiveColor, size: 30.sp),
+                SizedBox(width: 12.sp),
+                Expanded(
+                  child: Text(phonenumber.value, style: TextStyle(
+                    fontSize: 16.sp,
+                    color: ColorsConstants.kActiveColor,
+                  )),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+  void showSheetAdmin(context, double latitude, double longitude) {
+    showModalBottomSheet(context: context, builder: (BuildContext bc) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        child: Column(
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorsConstants.kMainColor,
+                      padding: EdgeInsets.fromLTRB(20.sp, 10.sp, 20.sp, 10.sp),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: (){
+                      openGoogleMapsApp(initialPosition.latitude,
+                          initialPosition.longitude, latitude, longitude);
+                    },
+                    child: Text("Chỉ đường", style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18.sp,
+                    ))),
+                IconButton(
+                  style: CustomButtonStyle.transparentButton,
+                  onPressed: (){
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.close, color: ColorsConstants.kActiveColor, size: 30.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.sp),
+            Center(
+              child: Text(
+                  'Thông tin vị trí',
+                  style: TextStyle(
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w700,
+                  )
+              ),
+            ),
+            SizedBox(height: 18.sp),
+            Row(
+              children:[
+                Icon(Icons.location_on, color: ColorsConstants.kActiveColor, size: 30.sp),
+                SizedBox(width: 12.sp),
+                Expanded(
+                  child: Text(currentAddress.value, style: TextStyle(
+                    fontSize: 16.sp,
+                    color: ColorsConstants.kActiveColor,
+                  )),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.sp),
+            Row(
+              children:[
+                Icon(Icons.phone, color: ColorsConstants.kActiveColor, size: 30.sp),
+                SizedBox(width: 12.sp),
+                Expanded(
+                  child: Text(phonenumber.value, style: TextStyle(
+                    fontSize: 16.sp,
+                    color: ColorsConstants.kActiveColor,
+                  )),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
 }

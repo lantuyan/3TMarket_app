@@ -13,9 +13,12 @@ import 'package:market3t/controllers/main/request_person/request_person_binding.
 import 'package:market3t/controllers/onboarding/onboarding_binding.dart';
 import 'package:market3t/controllers/profile/profile_binding.dart';
 import 'package:market3t/controllers/register/register_binding.dart';
+import 'package:market3t/controllers/register/register_or_login_with_phone_controller_binding.dart';
 import 'package:market3t/controllers/splash/splash_binding.dart';
 import 'package:market3t/views/auth/login/login_screen.dart';
+import 'package:market3t/views/auth/otp/otp_confirm_screen.dart';
 import 'package:market3t/views/auth/register/register_screen.dart';
+import 'package:market3t/views/auth/register/register_or_login_with_phone_screen.dart';
 import 'package:market3t/views/landing/landing_sceen.dart';
 import 'package:market3t/views/auth/onboarding/intro/intro_screen.dart';
 import 'package:market3t/views/auth/onboarding/profile/profile_screen.dart';
@@ -30,7 +33,9 @@ import 'package:market3t/views/main/home/statistic/line_chart_screen.dart';
 import 'package:market3t/views/main/home/statistic/pie_chart_screen.dart';
 import 'package:market3t/views/main/home/tab/notification_collector.dart';
 import 'package:market3t/views/main/home/tab/notification_user.dart';
+import 'package:market3t/views/main/infomation/feedback_screen.dart';
 import 'package:market3t/views/main/infomation/infomation_screen.dart';
+import 'package:market3t/views/auth/onboarding/profile/portrait_collector_screen.dart';
 import 'package:market3t/views/main/main_screen.dart';
 import 'package:market3t/views/main/map/map_collecter_screen.dart';
 import 'package:market3t/views/main/map/map_screen.dart';
@@ -59,6 +64,16 @@ class Routes {
       name: '/registerPage',
       page: () => RegisterScreen(),
       binding: RegisterBinding(),
+    ),
+    // reigster
+    GetPage(
+      name: '/registerOrLoginWithPhonePage',
+      page: () => RegisterOrLoginWithPhoneScreen(),
+      binding: RegisterOrLoginWithPhoneBinding(),
+    ),
+    GetPage(
+      name: '/otpConfirmPage',
+      page: () => OtpConfirmScreen(),
     ),
     GetPage(
       name : '/introPage',
@@ -94,9 +109,19 @@ class Routes {
       binding: RequestPersonBinding(),
     ),
     GetPage(
+      name: '/feedbackTrashPage',
+      page:() => FeedbackScreen(),
+      binding: RequestPersonBinding(),
+    ),
+    GetPage(
       name: '/collector_detail_process',
       page: () => CollectorDetailProcessScreen(),
       binding: CollectorDetailProcessBinding(),
+    ),
+    GetPage(
+      name: '/portrait_collector',
+      page: () => PortraitCollectorScreen(),
+      // binding: CollectorDetailProcessBinding(),
     ),
     GetPage(
       name: '/barChartPage',

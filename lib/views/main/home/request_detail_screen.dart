@@ -129,9 +129,7 @@ class PersonUI extends StatelessWidget {
               ),
             ),
           ),
-          placeholder: (context, url) => CircularProgressIndicator(
-            color: ColorsConstants.kMainColor,
-          ),
+          placeholder: (context, url) => Image.asset("assets/images/placeholder.png"),
           errorWidget: (context, url, error) => Icon(Icons.error),
         ),
         SizedBox(
@@ -236,29 +234,29 @@ class PersonUI extends StatelessWidget {
                       child: SizedBox(
                     height: 48.sp,
                     child: ElevatedButton(
-                        onPressed: () {},
-                        style: CustomButtonStyle.primaryButton,
+                        onPressed: null,
+                        style: CustomButtonStyle.cancelButton,
                         child: Text(
                           'Chờ xử lý',
                           style: TextStyle(
-                              color: ColorsConstants.kBGCardColor,
+                              color: ColorsConstants.kTextMainColor,
                               fontSize: 16.sp),
                         )),
                   )),
-                  SizedBox(
-                    width: 20.sp,
-                  ),
-                  Expanded(
-                      child: SizedBox(
-                    height: 48.sp,
-                    child: ElevatedButton(
-                        onPressed: null,
-                        style: CustomButtonStyle.primaryButton,
-                        child: Text(
-                          'Hoàn thành',
-                          style: TextStyle(fontSize: 16.sp),
-                        )),
-                  )),
+                  // SizedBox(
+                  //   width: 20.sp,
+                  // ),
+                  // Expanded(
+                  //     child: SizedBox(
+                  //   height: 48.sp,
+                  //   child: ElevatedButton(
+                  //       onPressed: null,
+                  //       style: CustomButtonStyle.primaryButton,
+                  //       child: Text(
+                  //         'Hoàn thành',
+                  //         style: TextStyle(fontSize: 16.sp),
+                  //       )),
+                  // )),
                 ],
               ),
               SizedBox(
@@ -274,13 +272,14 @@ class PersonUI extends StatelessWidget {
                           Text(
                             'Bạn chắc chắn muốn hủy yêu cầu thu gom này?',
                             style: AppTextStyles.bodyText2
-                                .copyWith(fontSize: 12.sp),
+                                .copyWith(fontSize: 14.sp),
                             textAlign: TextAlign.center,
                           ), () {
                         Get.back();
+
                         _requestDetailController
                             .cancelRequest(_requestDetailController.requestId);
-                      });
+                      },"Xác nhận");
                     },
                     style: CustomButtonStyle.cancelButton,
                     child: Text(
@@ -299,25 +298,68 @@ class PersonUI extends StatelessWidget {
                   child: SizedBox(
                 height: 48.sp,
                 child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // showDialog(
+                      //       context: context,
+                      //       builder: (BuildContext context) {
+                      //         return AlertDialog(
+                      //           title: Center(
+                      //             child: Text(
+                      //               "Xem Minh chứng",
+                      //               style: AppTextStyles.caption,
+                      //             ),
+                      //           ),
+                      //           content: CachedNetworkImage(
+                      //             imageUrl: _user
+                      //                 .requestDetailModel.finishImage!,
+                      //             imageBuilder: (context, imageProvider) =>
+                      //                 Container(
+                      //               width: ScreenUtil().screenWidth * 0.9,
+                      //               height: ScreenUtil().screenHeight * 0.5,
+                      //               decoration: BoxDecoration(
+                      //                 borderRadius: BorderRadius.circular(12),
+                      //                 image: DecorationImage(
+                      //                   image: imageProvider,
+                      //                   fit: BoxFit.cover,
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //             placeholder: (context, url) => Center(
+                      //               heightFactor: 1,
+                      //               widthFactor: 1,
+                      //               child: SizedBox(
+                      //                 height: 20.sp,
+                      //                 width: 20.sp,
+                      //                 child: Image.asset(
+                      //                     "assets/images/placeholder.png"),
+                      //               ),
+                      //             ),
+                      //             errorWidget: (context, url, error) =>
+                      //                 Icon(Icons.error),
+                      //           ),
+                      //           actions: <Widget>[
+                      //             TextButton(
+                      //               style: CustomButtonStyle.primaryButton,
+                      //               child: Center(
+                      //                 child: Text(
+                      //                   "Đóng",
+                      //                   style: AppTextStyles.headline1.copyWith(
+                      //                       color: ColorsConstants
+                      //                           .kBackgroundColor),
+                      //                 ),
+                      //               ),
+                      //               onPressed: () {
+                      //                 Navigator.of(context).pop();
+                      //               },
+                      //             ),
+                      //           ],
+                      //         );
+                      //       },
+                      //     );
+                    },
                     style: CustomButtonStyle.infoButton,
                     child: Text(
                       'Đang xử lý',
-                      style: TextStyle(
-                          color: ColorsConstants.kBGCardColor, fontSize: 16.sp),
-                    )),
-              )),
-              SizedBox(
-                width: 20.sp,
-              ),
-              Expanded(
-                  child: SizedBox(
-                height: 48.sp,
-                child: ElevatedButton(
-                    onPressed: null,
-                    style: CustomButtonStyle.primaryButton,
-                    child: Text(
-                      'Hoàn thành',
                       style: TextStyle(
                           color: ColorsConstants.kBGCardColor, fontSize: 16.sp),
                     )),
@@ -340,7 +382,7 @@ class PersonUI extends StatelessWidget {
                               return AlertDialog(
                                 title: Center(
                                   child: Text(
-                                    "Minh chứng",
+                                    "Xem Minh chứng",
                                     style: AppTextStyles.caption,
                                   ),
                                 ),
@@ -365,10 +407,8 @@ class PersonUI extends StatelessWidget {
                                     child: SizedBox(
                                       height: 20.sp,
                                       width: 20.sp,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: ColorsConstants.kActiveColor,
-                                      ),
+                                      child: Image.asset(
+                                          "assets/images/placeholder.png"),
                                     ),
                                   ),
                                   errorWidget: (context, url, error) =>
@@ -394,27 +434,11 @@ class PersonUI extends StatelessWidget {
                             },
                           );
                         },
-                        style: CustomButtonStyle.infoButton,
-                        child: Text(
-                          'Minh chứng',
-                          style:
-                              TextStyle(color: Colors.white, fontSize: 16.sp),
-                        )),
-                  )),
-                  SizedBox(
-                    width: 20.sp,
-                  ),
-                  Expanded(
-                      child: SizedBox(
-                    height: 48.sp,
-                    child: ElevatedButton(
-                        onPressed: () {},
                         style: CustomButtonStyle.primaryButton,
                         child: Text(
-                          'Hoàn thành',
-                          style: TextStyle(
-                              color: ColorsConstants.ksecondBackgroundColor,
-                              fontSize: 16.sp),
+                          'Hoàn thành/ Xem minh chứng',
+                          style:
+                              TextStyle(color: Colors.white, fontSize: 16.sp),
                         )),
                   )),
                 ],
@@ -504,9 +528,7 @@ class CollectorUI extends StatelessWidget {
               ),
             ),
           ),
-          placeholder: (context, url) => CircularProgressIndicator(
-            color: ColorsConstants.kMainColor,
-          ),
+          placeholder: (context, url) => Image.asset("assets/images/placeholder.png"),
           errorWidget: (context, url, error) => Icon(Icons.error),
         ),
         SizedBox(
@@ -663,10 +685,8 @@ class CollectorUI extends StatelessWidget {
                                       child: SizedBox(
                                         height: 20.sp,
                                         width: 20.sp,
-                                        child: const CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: ColorsConstants.kActiveColor,
-                                        ),
+                                        child: Image.asset(
+                                            "assets/images/placeholder.png"),
                                       ),
                                     ),
                                     errorWidget: (context, url, error) =>
@@ -693,9 +713,9 @@ class CollectorUI extends StatelessWidget {
                               },
                             );
                           },
-                          style: CustomButtonStyle.infoButton,
+                          style: CustomButtonStyle.primaryButton,
                           child: Text(
-                            'Minh chứng',
+                            'Kết quả',
                             style:
                                 TextStyle(color: Colors.white, fontSize: 16.sp),
                           )),
@@ -717,7 +737,7 @@ class CollectorUI extends StatelessWidget {
                                     .requestDetailModel.phone_number,
                               );
                             },
-                            style: CustomButtonStyle.primaryButton,
+                            style: CustomButtonStyle.infoButton,
                             child: Text(
                               'Liên Hệ',
                               style: TextStyle(
@@ -748,7 +768,7 @@ class CollectorUI extends StatelessWidget {
                                 .requestDetailModel.phone_number,
                           );
                         },
-                        style: CustomButtonStyle.primaryButton,
+                        style: CustomButtonStyle.infoButton,
                         child: Text(
                           'Liên Hệ',
                           style:
@@ -769,7 +789,7 @@ class CollectorUI extends StatelessWidget {
                                 Text(
                                   'Bạn chắc chắn muốn bỏ qua thu gom yêu cầu này?',
                                   style: AppTextStyles.bodyText2
-                                      .copyWith(fontSize: 12.sp),
+                                      .copyWith(fontSize: 14.sp),
                                   textAlign: TextAlign.center,
                                 ), () {
                               Get.back();
@@ -778,16 +798,16 @@ class CollectorUI extends StatelessWidget {
                                       .requestDetailModel.requestId,
                                   _requestDetailController
                                       .requestDetailModel.hidden);
-                            });
+                            },"Xác nhận");
                           } else {
                             null;
                           }
                         },
-                        style: CustomButtonStyle.transparentButton,
+                        style: CustomButtonStyle.cancelButton,
                         child: Text(
                           'Bỏ qua',
                           style: TextStyle(
-                              color: ColorsConstants.kTextMainColor,
+                              color: Colors.white,
                               fontSize: 16.sp),
                         )),
                   )),
@@ -803,21 +823,32 @@ class CollectorUI extends StatelessWidget {
                       width: ScreenUtil().screenWidth,
                       height: 48.sp,
                       child: ElevatedButton(
-                          onPressed: () {
-                            CustomDialogs.confirmDialog(
-                                'Xác nhận thu gom',
-                                Text(
-                                  'Bạn chắc chắn muốn xác nhận thu gom yêu cầu này? Yêu cầu này sẽ được chuyển vào phần đã xử lý ',
-                                  style: AppTextStyles.bodyText2
-                                      .copyWith(fontSize: 12.sp),
-                                  textAlign: TextAlign.center,
-                                ), () async {
-                              await _requestDetailController.confirmRequest(
-                                  _requestDetailController
-                                      .requestDetailModel.requestId,
-                                  _requestDetailController.userId.value);
-                              await Get.offAllNamed('/mainPage');
-                            });
+                          onPressed: () async {
+                            var checkRequestProcess = await _requestDetailController.checkRequestProcess();
+                            if( checkRequestProcess != null && checkRequestProcess != ''){
+                              CustomDialogs.confirmDialog(
+                                  'Cảnh báo',
+                                  Text(
+                                    'Bạn đang xử lý 1 yêu cầu khác. Vui lòng gửi minh chứng trước khi thực hiện yêu cầu khác',
+                                    style: AppTextStyles.bodyText2
+                                        .copyWith(fontSize: 14.sp),
+                                    textAlign: TextAlign.center,
+                                  ), () async {
+                                await _requestDetailController.redirectToRequestProcess();
+                              },"Minh chứng");
+                            }else{
+                              CustomDialogs.confirmDialog(
+                                  'Xác nhận thu gom',
+                                  Text(
+                                    'Bạn chắc chắn muốn xác nhận thu gom yêu cầu này? Yêu cầu này sẽ chuyển vào hàng đợi chờ minh chứng',
+                                    style: AppTextStyles.bodyText2
+                                        .copyWith(fontSize: 14.sp),
+                                    textAlign: TextAlign.center,
+                                  ), () async {
+                                await _requestDetailController.confirmRequest();
+                              },"Xác nhận");
+                            }
+
                           },
                           style: CustomButtonStyle.primaryButton,
                           child: Text(
@@ -887,9 +918,7 @@ class AdminUI extends StatelessWidget {
               ),
             ),
           ),
-          placeholder: (context, url) => CircularProgressIndicator(
-            color: ColorsConstants.kMainColor,
-          ),
+          placeholder: (context, url) => Image.asset("assets/images/placeholder.png"),
           errorWidget: (context, url, error) => Icon(Icons.error),
         ),
         SizedBox(
@@ -1019,10 +1048,7 @@ class AdminUI extends StatelessWidget {
                                       child: SizedBox(
                                         height: 20.sp,
                                         width: 20.sp,
-                                        child: const CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: ColorsConstants.kActiveColor,
-                                        ),
+                                        child: Image.asset("assets/images/placeholder.png"),
                                       ),
                                     ),
                                     errorWidget: (context, url, error) =>
@@ -1049,7 +1075,7 @@ class AdminUI extends StatelessWidget {
                               },
                             );
                           },
-                          style: CustomButtonStyle.infoButton,
+                          style: CustomButtonStyle.primaryButton,
                           child: Text(
                             'Minh chứng',
                             style:
@@ -1071,7 +1097,7 @@ class AdminUI extends StatelessWidget {
                                     .requestDetailModel.phone_number,
                               );
                             },
-                            style: CustomButtonStyle.primaryButton,
+                            style: CustomButtonStyle.infoButton,
                             child: Text(
                               'Liên Hệ',
                               style: TextStyle(
@@ -1102,7 +1128,7 @@ class AdminUI extends StatelessWidget {
                                 .requestDetailModel.phone_number,
                           );
                         },
-                        style: CustomButtonStyle.primaryButton,
+                        style: CustomButtonStyle.infoButton,
                         child: Text(
                           'Liên Hệ',
                           style:
