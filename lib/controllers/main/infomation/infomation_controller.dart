@@ -6,21 +6,16 @@ import 'package:market3t/managers/data_manager.dart';
 import 'package:market3t/providers/auth_provider.dart';
 
 import 'package:market3t/models/infomation/setting_infomation.dart';
-import 'package:market3t/models/trash/category_model.dart';
-import 'package:market3t/models/trash/user_request_trash_model.dart';
-import 'package:market3t/providers/auth_provider.dart';
-import 'package:market3t/repositories/category_reponsitory.dart';
 import 'package:market3t/repositories/infomation_reposistory.dart';
-
-import 'package:market3t/repositories/user_request_trash_reponsitory.dart';
+import 'package:market3t/repositories/user_reposistory.dart';
 import 'package:market3t/widgets/custom_dialogs.dart';
-// import 'package:uni_links/uni_links.dart';
 
 class InfomationController extends GetxController {
   final GetStorage _getStorage = GetStorage();
   final InfomationReposistory _infomationReposistory;
+  final UserRepository _userRepository;
 
-  InfomationController(this._infomationReposistory);
+  InfomationController(this._infomationReposistory, this._userRepository);
 
   late SettingInformation mainSettingInfommation;
   List<SettingInformation> settingList = [];
@@ -63,16 +58,40 @@ class InfomationController extends GetxController {
       }).catchError((onError) {
         print("Error: $onError");
         CustomDialogs.hideLoadingDialog();
-        CustomDialogs.showSnackBar(2, "wrong".tr, 'error');
+        CustomDialogs.showSnackBar(2, "Đã có lỗi xảy ra vui lòng thử lại sau!", 'error');
         DataManager().clearData();
         Get.offAllNamed('/landingPage');
       });
     } catch (error) {
       print("Error: $error");
       CustomDialogs.hideLoadingDialog();
-      CustomDialogs.showSnackBar(2, "wrong".tr, 'error');
+      CustomDialogs.showSnackBar(2, "Đã có lỗi xảy ra vui lòng thử lại sau!", 'error');
       DataManager().clearData();
       Get.offAllNamed('/landingPage');
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    String uuid = _getStorage.read('userId');
+    CustomDialogs.showLoadingDialog();
+    try {
+      await _userRepository.deleteUser(uuid).then((value) {
+        _getStorage.remove('userId');
+        _getStorage.remove('sessionId');
+        _getStorage.remove('name');
+        _getStorage.remove('role');
+        _getStorage.remove('zalonumber');
+        _getStorage.remove('address');
+
+        DataManager().clearData();
+        CustomDialogs.hideLoadingDialog();
+        Get.offAllNamed('/landingPage');
+        CustomDialogs.showSnackBar(2, "Xóa tài khoản thành công", 'success');
+      });
+    } catch (e) {
+      print(e);
+      CustomDialogs.hideLoadingDialog();
+      CustomDialogs.showSnackBar(2, "Đã có lỗi xảy ra vui lòng thử lại sau!", 'error');
     }
   }
 }

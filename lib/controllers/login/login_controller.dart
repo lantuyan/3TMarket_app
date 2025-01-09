@@ -42,9 +42,9 @@ class LoginController extends GetxController {
         CustomDialogs.hideLoadingDialog();
         CustomDialogs.showSnackBar(2, "Tài khoản của bạn đã bị khóa", 'error');
       } else {
-      _getStorage.write('userId', value.userId);
-      _getStorage.write('sessionId', value.$id);
       var userModel = await getUserModel(value.userId);
+      await _getStorage.write('userId', value.userId);
+      await _getStorage.write('sessionId', value.$id);
       await _getStorage.write('name', userModel.name);
       await _getStorage.write('role', userModel.role);
       await _getStorage.write('zalonumber', userModel.zalonumber);

@@ -34,21 +34,24 @@ class RegisterController extends GetxController {
   RxBool confirmPasswordVisible = true.obs;
   RxString roleField = 'person'.obs;
   Future<void> register() async {
-
     CustomDialogs.showLoadingDialog();
     Map<String, dynamic> formData = {
       "email" : emailFieldKey.currentState!.value.trim(),
       "username" : '', 
       "password" : passwordFieldKey.currentState!.value
     };
+    try{
+      await _authRepository.deleteAllSession();
+    }catch(e){}
+
     _authRepository.register(formData,roleField.value).then((value) async {
       await _authRepository.login({
         'email': formData['email'],
         'password': formData['password']
       }).then((value) async {
-        _getStorage.write('userId', value.userId);
-        _getStorage.write('sessionId', value.$id);
         final userModel = await getUserModel(value.userId);
+        await _getStorage.write('userId', value.userId);
+        await _getStorage.write('sessionId', value.$id);
         await _getStorage.write('name', userModel.name);
         await _getStorage.write('role', userModel.role);
         await _getStorage.write('zalonumber', userModel.zalonumber);

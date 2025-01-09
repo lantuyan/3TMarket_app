@@ -28,4 +28,8 @@ class UserRepository {
     final response = await userProvider.checkUserBlacklist(userId);
     return response;
   }
+
+  Future<void> deleteUser(uuid) async {
+    await userProvider.deleteUser(uuid);
+  }
 }
