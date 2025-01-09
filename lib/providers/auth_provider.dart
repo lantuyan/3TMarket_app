@@ -235,4 +235,8 @@ class AuthProvider {
       return false;
     }
   }
+
+  Future<void> deleteAllSession() async{
+    await account.deleteSessions();
+  }
 }

@@ -23,5 +23,5 @@ class AuthRepository{
   Future sendLinkResetPassword(Map map) => _authProvider.sendLinkResetPassword(map);
   Future resetPassword(Map map, String userId, String secret ) => _authProvider.resetPassword(map, userId, secret);
 
-  
+  Future<void> deleteAllSession() => _authProvider.deleteAllSession();
 }

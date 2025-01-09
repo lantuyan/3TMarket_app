@@ -1,18 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-import 'package:market3t/controllers/login/login_controller.dart';
-import 'package:market3t/controllers/main/infomation/infomation_controller.dart';
-import 'package:market3t/providers/infomation_provider.dart';
-import 'package:market3t/providers/user_request_trash_provider.dart';
-import 'package:market3t/repositories/infomation_reposistory.dart';
-import 'package:market3t/repositories/user_request_trash_reponsitory.dart';
 import 'package:market3t/shared/themes/style/app_text_styles.dart';
-import 'package:market3t/widgets/custom_dialogs.dart';
 
 Padding userName(String name) {
-  final InfomationController _homeController = Get.put(InfomationController(
-      InfomationReposistory(InfomationProvider())));
   return Padding(
     padding: EdgeInsets.symmetric(horizontal: 0.w, vertical: 0.sp),
     child: Row(

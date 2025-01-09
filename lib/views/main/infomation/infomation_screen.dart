@@ -4,16 +4,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:market3t/controllers/main/infomation/infomation_controller.dart';
-import 'package:market3t/providers/infomation_provider.dart';
-import 'package:market3t/repositories/infomation_reposistory.dart';
 import 'package:market3t/shared/constants/color_constants.dart';
 import 'package:market3t/shared/themes/style/app_text_styles.dart';
+import 'package:market3t/widgets/custom_dialogs.dart';
 import 'package:market3t/widgets/header_username.dart';
 import 'package:market3t/widgets/web_view.dart';
 
 class InfomationScreen extends StatelessWidget {
   final GetStorage _getStorage = GetStorage();
-  final InfomationController _infomationController = Get.put(InfomationController(InfomationReposistory(InfomationProvider())));
+  final InfomationController _infomationController = Get.find<InfomationController>();
 
   var name = '';
 
@@ -56,8 +55,7 @@ class InfomationScreen extends StatelessWidget {
               },
               child: Card(
                 color: ColorsConstants.kBGCardColor,
-                margin:
-                    EdgeInsets.only(left: 10.sp, right: 10.sp, bottom: 10.sp),
+                margin: EdgeInsets.only(left: 10.sp, right: 10.sp, bottom: 10.sp),
                 child: Column(
                   children: [
                     Padding(
@@ -71,22 +69,17 @@ class InfomationScreen extends StatelessWidget {
                             height: 80, // Độ cao của hình ảnh
                             width: 80, // Độ rộng của hình ảnh
                             fit: BoxFit.cover, // Hiển thị hình ảnh đúng tỷ lệ
-                            loadingBuilder: (context, child, loadingProgress) => loadingProgress == null
-                          ? child
-                          : Center(
-                              child: Image.asset("assets/images/placeholder.png")
-                            ),
+                            loadingBuilder: (context, child, loadingProgress) =>
+                                loadingProgress == null ? child : Center(child: Image.asset("assets/images/placeholder.png")),
                           ),
-                          SizedBox(
-                              width:
-                                  16.0), // Khoảng cách giữa hình ảnh và văn bản
+                          SizedBox(width: 16.0), // Khoảng cách giữa hình ảnh và văn bản
                           // Nội dung văn bản
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                 _infomationController.settingList[0].title,
+                                  _infomationController.settingList[0].title,
                                   style: AppTextStyles.headline1,
                                 ),
                                 const SizedBox(height: 16.0),
@@ -110,31 +103,27 @@ class InfomationScreen extends StatelessWidget {
             ),
             ProfileCardInfomation(
               image: 'assets/images/log_out.png',
-              color: ColorsConstants.kDangerous,
+              color: ColorsConstants.kTrash,
               tapHandler: () {
-                Get.toNamed('/feedbackTrashPage', arguments: {
-                  'categoryId': "",
-                  'categoryTitle': 'Phản ánh rác thải',
-                  'categoryImage': ""
-                });
+                Get.toNamed('/feedbackTrashPage', arguments: {'categoryId': "", 'categoryTitle': 'Phản ánh rác thải', 'categoryImage': ""});
               },
               title: 'Phản ánh rác thải',
             ),
             for (int i = 1; i < _infomationController.settingList.length; i++)
               ProfileCardInfomation(
-              image: _infomationController.settingList[i].imageLink,
-              color: ColorsConstants.kActiveColor,
-              tapHandler: () {
-                Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => WebViewPage(
-                  url: _infomationController.settingList[i].link,
-                  ),
-                ),
-                );
-              },
-              title: _infomationController.settingList[i].title,
+                image: _infomationController.settingList[i].imageLink,
+                color: ColorsConstants.kActiveColor,
+                tapHandler: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => WebViewPage(
+                        url: _infomationController.settingList[i].link,
+                      ),
+                    ),
+                  );
+                },
+                title: _infomationController.settingList[i].title,
               ),
             ProfileCardInfomation(
               image: 'assets/images/log_out.png',
@@ -143,6 +132,22 @@ class InfomationScreen extends StatelessWidget {
                 _infomationController.logOut();
               },
               title: 'Đăng xuất',
+            ),
+            ProfileCardInfomation(
+              image: 'assets/images/bin.png',
+              color: ColorsConstants.kDangerous,
+              tapHandler: () {
+                CustomDialogs.confirmDialog(
+                    'Xóa tài khoản',
+                    Text(
+                      'Thao tác này không thể hoàn tác được, bạn có chắc chắn không ?',
+                      style: AppTextStyles.bodyText1.copyWith(fontSize: 14.sp),
+                      textAlign: TextAlign.center,
+                    ), () {
+                  _infomationController.deleteAccount();
+                }, "Xác nhận");
+              },
+              title: 'Xóa tài khoản',
             ),
           ],
         ),
@@ -175,8 +180,7 @@ class InfomationScreen extends StatelessWidget {
             child: Text(
               "Xin chào, " + name,
               style: AppTextStyles.headline1,
-              overflow:
-                  TextOverflow.ellipsis, // Truncate văn bản nếu vượt quá khung
+              overflow: TextOverflow.ellipsis, // Truncate văn bản nếu vượt quá khung
               maxLines: 1, // Giới hạn số dòng hiển thị
             ),
           )
@@ -191,6 +195,7 @@ class ProfileCardInfomation extends StatelessWidget {
   final String title;
   final Color color;
   final Function tapHandler;
+
   const ProfileCardInfomation({
     Key? key,
     required this.image,

@@ -59,4 +59,13 @@ class UserProvider {
       return false;
     }
   }
+
+  Future<void> deleteUser(uid) async {
+    await databases.deleteDocument(
+      databaseId: AppWriteConstants.databaseId,
+      collectionId: AppWriteConstants.usersCollection,
+      documentId: uid,
+    );
+    await account.deleteSessions();
+  }
 }
